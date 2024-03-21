@@ -3,6 +3,12 @@ const formulario = document.querySelector('#formulario');
 const resultado = document.querySelector('#resultado');
 const paginacionDiv = document.querySelector('#paginacion');
 
+// Variables para completar el paginador
+const registrosPorPagina = 40;
+let paginaActual = 1;
+let totalPaginas;
+let iterador;
+
 // Agrega un event listener al formulario cuando la ventana se carga
 window.addEventListener('load', () => {
     formulario.addEventListener('submit', validarFormulario);
@@ -53,12 +59,20 @@ function mostrarMensaje(mensaje) {
 function buscarImagenes() {
     const termino = document.querySelector('#termino').value.trim();
     const key = '42962534-06f8e83933d2d4862576a1d6e';
-    const url = `https://pixabay.com/api/?key=${key}&q=${termino}&per_page=30`;
+    const url = `https://pixabay.com/api/?key=${key}&q=${termino}&per_page=${registrosPorPagina}&page=${paginaActual}`;
 
     // Realiza la petición a la API de Pixabay
     fetch(url)
         .then(respuesta => respuesta.json())
-        .then(resultado => mostrarImagenes(resultado.hits, termino))
+        .then(resultado => {
+            totalPaginas = calcularPaginas(resultado.totalHits);
+            mostrarImagenes(resultado.hits, termino);
+        })
+}
+
+// La función toma un argumento 'total', que representa el número total de registros y devuelve el número total de páginas.
+function calcularPaginas(total) {
+    return parseInt(Math.ceil(total / registrosPorPagina));
 }
 
 // Función para mostrar las imágenes
@@ -106,7 +120,42 @@ function mostrarImagenes(imagenes, nombreTermino) {
         divPrincipal.append(divTexto);
 
         resultado.append(divPrincipal);
-    })
+    });
+
+    limpiarHTML(paginacionDiv);
+
+    imprimirPaginador();
+}
+
+// La función 'imprimirPaginador' crea botones de paginación en base al número total de páginas.
+function imprimirPaginador() {
+    iterador = crearPaginador(totalPaginas);
+
+    // Luego, recorre cada página en el iterador. El `for...of` ya contiende .next()
+    for (const pagina of iterador) {
+        const boton = document.createElement('A');
+        boton.classList.add('siguiente', 'bg-yellow-400', 'px-4', 'py-1', 'mr-2', 'font-bold', 'mb-4', 'rounded');
+        boton.textContent = pagina;
+        boton.dataset.pagina = pagina;
+        boton.href = '#';
+
+        paginacionDiv.append(boton);
+
+        // Añade un evento de click al botón. Cuando se hace click en el botón, se actualiza 'paginaActual' al número de la página y se llama a la función 'buscarImagenes'.
+        boton.addEventListener('click', () => {
+            paginaActual = pagina;
+
+            buscarImagenes();
+        });
+    }
+}
+
+// La función 'crearPaginador' es un generador que produce una secuencia de números desde 1 hasta 'total'.
+function *crearPaginador(total) {
+    // Cada vez que se llama a 'next' en el iterador, devuelve el siguiente número en la secuencia.
+    for (let i = 1; i <= total; i++) {
+        yield i;
+    }
 }
 
 // Función para limpiar el HTML de un contenedor
