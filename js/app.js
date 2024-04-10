@@ -56,18 +56,29 @@ function mostrarMensaje(mensaje) {
 }
 
 // Función para buscar las imágenes
-function buscarImagenes() {
+async function buscarImagenes() {
     const termino = document.querySelector('#termino').value.trim();
     const key = '42962534-06f8e83933d2d4862576a1d6e';
     const url = `https://pixabay.com/api/?key=${key}&q=${termino}&per_page=${registrosPorPagina}&page=${paginaActual}`;
 
     // Realiza la petición a la API de Pixabay
-    fetch(url)
-        .then(respuesta => respuesta.json())
-        .then(resultado => {
-            totalPaginas = calcularPaginas(resultado.totalHits);
-            mostrarImagenes(resultado.hits, termino);
-        })
+    // Primera forma con fetch y promesas
+    // fetch(url)
+    //     .then(respuesta => respuesta.json())
+    //     .then(resultado => {
+    //         totalPaginas = calcularPaginas(resultado.totalHits);
+    //         mostrarImagenes(resultado.hits, termino);
+    //     })
+
+    // Segunda forma con async await
+    try {
+        const respuesta = await fetch(url);
+        const resultado = await respuesta.json();
+        totalPaginas = calcularPaginas(resultado.totalHits);
+        mostrarImagenes(resultado.hits, termino);
+    } catch (error) {
+        console.log(error);
+    }
 }
 
 // La función toma un argumento 'total', que representa el número total de registros y devuelve el número total de páginas.
